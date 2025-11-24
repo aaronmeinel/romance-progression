@@ -58,3 +58,59 @@
             (if (= status 404)
               "Page not found."
               "Something went wrong.")]))})
+
+(defn input
+  "Generic input element for forms."
+  [attrs]
+  [:input (merge {:type "number" :class "input input-bordered"} attrs)])
+
+(defn set-row
+  "Display a set in a row with input elements for logging."
+  [{:keys [prescribed-weight prescribed-reps
+           actual-weight actual-reps]}]
+  [:div.set-row.flex.items-center.gap-2
+   (input {:name "weight"
+           :value actual-weight
+           :placeholder (or prescribed-weight "kg")
+           :inputmode "decimal"
+           :step "0.5"})
+   [:span "×"]
+   (input {:name "reps"
+           :value actual-reps
+           :placeholder (or prescribed-reps "reps")
+           :inputmode "numeric"})
+   [:input {:type "checkbox"
+            :name "completed"
+            :checked (some? actual-weight)}]])
+
+
+
+
+
+(defn exercise
+  "Display an exercise with its sets."
+  [{:keys [name sets]}] [:div.exercise.mb-6
+                                      [:h3.text-lg.font-semibold.mb2 name]
+                                      [:div.sets.space-y-2
+                                       (for [set-data sets] (set-row set-data))]])
+
+(defn workout
+  "Display a workout as a section, with the exercises in it."
+  [{:keys [name day exercises]}]
+  [:div.workout
+   [:h2.text-2xl.font-bold.mb-4
+    name " - " (clojure.core/name day)]
+   [:div.exercises
+    (for [ex exercises]
+      (exercise ex))]])
+
+(defn workout-list [workouts]
+  [:div.workout-list.p-4
+   (for [w workouts]
+     (workout w))])
+
+(defn render-plan [{:keys [microcycles]}]
+  (->> microcycles
+       first ;; TODO: replace this with get-active-microcycle
+       :workouts
+       workout-list))
