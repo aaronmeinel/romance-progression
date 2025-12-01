@@ -67,21 +67,21 @@
 (defn set-row
   "Display a set in a row with input elements for logging."
   [{:keys [prescribed-weight prescribed-reps
-           actual-weight actual-reps]}]
+           performed-weight performed-reps]}]
   [:div.set-row.flex.items-center.gap-2
    (input {:name "weight"
-           :value actual-weight
+           :value performed-weight
            :placeholder (or prescribed-weight "kg")
            :inputmode "decimal"
            :step "0.5"})
    [:span "×"]
    (input {:name "reps"
-           :value actual-reps
+           :value performed-reps
            :placeholder (or prescribed-reps "reps")
            :inputmode "numeric"})
    [:input {:type "checkbox"
             :name "completed"
-            :checked (some? actual-weight)}]])
+            :checked (some? performed-weight)}]])
 
 
 
@@ -89,28 +89,38 @@
 
 (defn exercise
   "Display an exercise with its sets."
-  [{:keys [name sets]}] [:div.exercise.mb-6
-                                      [:h3.text-lg.font-semibold.mb2 name]
+  [exercise-name sets] [:div.exercise.mb-6
+                                      [:h3.text-lg.font-semibold.mb2 exercise-name]
                                       [:div.sets.space-y-2
                                        (for [set-data sets] (set-row set-data))]])
 
 (defn workout
   "Display a workout as a section, with the exercises in it."
-  [{:keys [name day exercises]}]
+  [workout-day exercises]
   [:div.workout
    [:h2.text-2xl.font-bold.mb-4
-    name " - " (clojure.core/name day)]
+    name " - " (clojure.core/name workout-day)]
    [:div.exercises
-    (for [ex exercises]
-      (exercise ex))]])
+    (for [[ex-name sets] exercises]
+      (exercise ex-name sets))]])
 
-(defn workout-list [workouts]
-  [:div.workout-list.p-4
-   (for [w workouts]
-     (workout w))])
 
-(defn render-plan [{:keys [microcycles]}]
-  (->> microcycles
-       first ;; TODO: replace this with get-active-microcycle
-       :workouts
-       workout-list))
+(defn microcycle [microcycle-idx workouts]
+  [:div.microcycle
+   [:h2. "Week " (inc microcycle-idx)]
+   [:div.workouts
+    (for [[day exercises] workouts]
+      (workout day exercises))]])
+
+
+(defn mesocycle [mesocycle-name microcycles]
+  [:div.mesocycle
+   [:h1 mesocycle-name]
+   [:div.microcycles
+    (for [[idx workouts] microcycles]
+      (microcycle idx workouts))]])
+
+(defn render-plan [data]
+  [:div.plan
+   (for [[meso-name micros] data]
+     (mesocycle meso-name micros))])

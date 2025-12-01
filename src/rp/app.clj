@@ -5,9 +5,20 @@
             [rp.settings :as settings]
             [rum.core :as rum]
             [rp.domain.plan :as plan]
+            [rp.domain.state :as st]
             [xtdb.api :as xt]
             [cheshire.core :as cheshire]
             [clojure.core :as c]))
+
+
+(def example-events [(st/completed-set "full body" 0 :monday "Squat" 100 10 nil nil)
+                     (st/completed-set "full body" 0 :monday "Squat" 100 9  nil nil)
+                     (st/completed-set "full body" 0 :monday "Pullup" 80 10  nil nil)
+                     (st/completed-set "full body" 0 :thursday "Bench" 100 8 nil nil)
+                     (st/completed-set "full body" 0 :thursday "Bench" 100 6 nil nil)
+                     (st/completed-set "full body" 0 :thursday "Deadlift" 300 5 nil nil)
+                    (st/completed-set "full body" 1 :monday "Squat" nil nil 102.5 10)])
+
 
 
 
@@ -25,6 +36,9 @@
           "Sign out"])
        "."]
       [:.h-6 "Plan"]
+      (ui/render-plan (->> example-events
+                           (st/get-microcycle 0)
+                           st/microcycle->plan-structure))
       (ui/render-plan (plan/->plan plan/template))
       [:.h-6])))
 

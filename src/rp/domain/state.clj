@@ -1,126 +1,95 @@
 (ns rp.domain.state
+)
 
-  "Event sourcing for workout tracking. State = reduce over events.
-   Vectors for natural ordering, maps for lookup by name.")
 
-;; =============================================================================
-;; Core
-;; =============================================================================
 
-(defn apply-event [state {:keys [type] :as event}]
-  (case type
-    :microcycle-started
-    (let [idx (count (:microcycles state))]
-      (-> state
-          (assoc :current-mc idx)
-          (update :microcycles (fnil conj []) {:status :active :workouts {}})))
+(defn completed-set "Log a completed set with full context."
+  [mesocycle microcycle workout exercise performed-weight performed-reps prescribed-weight prescribed-reps]
+  {:type :set-completed
+   :mesocycle mesocycle
+   :microcycle microcycle
+   :workout workout
+   :exercise exercise
+   :performed-weight performed-weight
+   :performed-reps prescribed-reps
+   :prescribed-weight prescribed-weight
+   :prescribed-reps prescribed-reps
+   :timestamp (java.time.Instant/now)})
 
-    :workout-started
-    (-> state
-        (assoc :current-wo (:name event))
-        (assoc-in [:microcycles (:current-mc state)
-                   :workouts (:name event)]
-                  {:name (:name event) :status :active :exercises {}}))
 
-    :set-completed
-    (let [{:keys [current-mc current-wo]} state
-          {:keys [exercise set-index weight reps]} event]
-      (assoc-in state [:microcycles current-mc
-                       :workouts current-wo
-                       :exercises exercise
-                       set-index]
-                {:weight weight :reps reps}))
 
-    :workout-completed
-    (-> state
-        (assoc-in [:microcycles (:current-mc state)
-                   :workouts (:current-wo state)
-                   :status] :completed)
-        (dissoc :current-wo))
 
-    :microcycle-completed
-    (-> state
-        (assoc-in [:microcycles (:current-mc state) :status] :completed)
-        (dissoc :current-mc))
 
-    state))
+(defn ->set [event]
+  (select-keys event [:weight :reps]))
 
-(defn build-state [events]
-  (reduce apply-event {} events))
+(defn ->sets [events]
+  (mapv ->set events))
 
-;; =============================================================================
-;; Merge
-;; =============================================================================
+(defn get-all-workouts-for-day
+  "Get all instances of a certain workout.
+   That would be e.g. the monday workout,
+   over the whole history.
+  Not sure how useful this is, more of an exercise.
+   "
+  [day events]
+  (->> events
+       (filter #(= (:workout %) day))
+       (group-by (juxt :mesocycle :microcycle :workout :exercise))))
 
-(defn merge-set [planned actual]
-  (merge planned actual))
 
-(defn merge-exercise [planned actual-sets]
-  (if-not actual-sets
-    planned
-    (update planned :sets
-            (fn [sets]
-              (mapv #(merge-set % (get actual-sets %2))
-                    sets
-                    (range))))))
 
-(defn merge-workout [planned actual]
-  (cond-> planned
-    true (assoc :status (or (:status actual) :not-started))
-    actual (update :exercises
-                   (fn [exercises]
-                     (mapv #(merge-exercise % (get-in actual [:exercises (:name %)]))
-                           exercises)))))
 
-(defn merge-microcycle [planned actual]
-  (cond-> planned
-    true (assoc :status (or (:status actual) :not-started))
-    actual (update :workouts
-                   (fn [workouts]
-                     (mapv #(merge-workout % (get-in actual [:workouts (:name %)]))
-                           workouts)))))
+;; Probably have to ditch the :exercise to make this usable for workouts that consist of several exercises
+;; AAAAnd thats what i did. To actually render the "day" for ui i might have to put the vals through another group-by :exercise then
+;; Actually I am doing that directly in this function. This gives us structurally almost what we need to render this in the UI, only need to transform this somehow to make rendering more convenient. Maybe its already possible like this, lets
+;; explore further
+;; Maybe we just need to come up with a better name for this function
+(defn get-microcycle [n events]
+  (let [by-microcycle-and-workout (->> events
+                                       (filter #(= (:microcycle %) n))
+                                       (group-by (juxt :mesocycle :microcycle :workout)))]
+    (update-vals by-microcycle-and-workout (partial group-by :exercise))))
 
-(defn annotate-plan [plan state]
-  (update plan :microcycles
-          (fn [microcycles]
-            (mapv #(merge-microcycle % (get-in state [:microcycles %2]))
-                  microcycles
-                  (range)))))
 
-;; =============================================================================
-;; Queries
-;; =============================================================================
+(defn microcycle->plan-structure
+  "Transform a microcycle view on the events into a nested map that is congruent
+  with the structure of a plan."
+  [microcycle]
 
-(defn current-workout [state]
-  (when-let [wo-name (:current-wo state)]
-    (get-in state [:microcycles (:current-mc state) :workouts wo-name])))
+  (reduce-kv (fn [m k v]
+               (assoc-in m k v)) {} microcycle))
 
-(defn volume [workout]
-  (->> workout :exercises vals
-       (mapcat vals)
-       (keep (fn [{:keys [weight reps]}]
-               (when (and weight reps) (* weight reps))))
-       (reduce + 0)))
 
-;; =============================================================================
-;; Rich Comment
-;; =============================================================================
+
 
 (comment
-  ;; Simple events - no IDs needed
+
   (def events
-    [{:type :microcycle-started}
-     {:type :workout-started :name "A"}
-     {:type :set-completed :exercise "Bench" :set-index 0 :weight 100 :reps 8}
-     {:type :set-completed :exercise "Bench" :set-index 1 :weight 100 :reps 7}
-     {:type :workout-completed}
-     {:type :workout-started :name "B"}
-     {:type :set-completed :exercise "Row" :set-index 0 :weight 80 :reps 10}])
+    [(completed-set "full body" 0 :monday "Squat" 100 10 nil nil)
+     (completed-set "full body" 0 :monday "Squat" 100 9  nil nil)
+     (completed-set "full body" 0 :monday "Pullup" 80 10  nil nil)
+     (completed-set "full body" 0 :thursday "Bench" 100 8 nil nil)
+     (completed-set "full body" 0 :thursday "Bench" 100 6 nil nil)
+     (completed-set "full body" 0 :thursday "Deadlift" 300 5 nil nil)
+     (completed-set "full body" 1 :monday "Squat" nil nil 102.5 10)])
 
-  (def state (build-state events))
-  state
+  (def ^:private new-value
+    (->> events
+         (get-microcycle 0)
+         microcycle->plan-structure))
 
-  (current-workout state)
-  (volume (current-workout state))
 
-  )
+  new-value
+{"full body" {0 {:monday {"Squat" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Squat", :type :set-completed, :workout :monday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0x1048339f "2025-11-30T16:24:07.192697121Z"], :performed-reps nil} {:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Squat", :type :set-completed, :workout :monday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0x10fd118b "2025-11-30T16:24:07.192705237Z"], :performed-reps nil}], "Pullup" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Pullup", :type :set-completed, :workout :monday, :performed-weight 80, :mesocycle "full body", :timestamp #object[java.time.Instant 0x7948a1c3 "2025-11-30T16:24:07.192707751Z"], :performed-reps nil}]}, :thursday {"Bench" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Bench", :type :set-completed, :workout :thursday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0x5b3d8cf5 "2025-11-30T16:24:07.192711800Z"], :performed-reps nil} {:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Bench", :type :set-completed, :workout :thursday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0xab888c6 "2025-11-30T16:24:07.192713943Z"], :performed-reps nil}], "Deadlift" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Deadlift", :type :set-completed, :workout :thursday, :performed-weight 300, :mesocycle "full body", :timestamp #object[java.time.Instant 0x7231a153 "2025-11-30T16:24:07.192716136Z"], :performed-reps nil}]}}}}
+
+
+  (get-in new-value ["full body" 0 :thursday])
+
+
+
+
+
+
+  ()) ;;
+ ;;)

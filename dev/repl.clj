@@ -1,6 +1,7 @@
 (ns repl
   (:require [rp :as main]
             [com.biffweb :as biff :refer [q]]
+            [rp.logging :as logging]
             [clojure.edn :as edn]
             [clojure.java.io :as io]))
 
@@ -70,14 +71,20 @@
        '{:find (pull user [*])
          :where [[user :user/email]]}))
 
-  ;; Update an existing user's email address
+  (let [{:keys [biff/db] :as ctx} (get-context)
+        user-id (biff/lookup-id db :user/email "aaronrebmann@gmail.com")]
+(q db
+   '{:find  email
+     :where [[user :user/email email]]}))
+
+;; Update an existing user's email address
   (let [{:keys [biff/db] :as ctx} (get-context)
         user-id (biff/lookup-id db :user/email "hello@example.com")]
     (biff/submit-tx ctx
-      [{:db/doc-type :user
-        :xt/id user-id
-        :db/op :update
-        :user/email "new.address@example.com"}]))
+                    [{:db/doc-type :user
+                      :xt/id user-id
+                      :db/op :update
+                      :user/email "new.address@example.com"}]))
 
   (sort (keys (get-context)))
 
