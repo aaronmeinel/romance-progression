@@ -36,7 +36,7 @@
           "Sign out"])
        "."]
       [:.h-6 "Plan"]
-      (ui/render-plan (->> example-events
+      (ui/render-plan (->> example-events ;; Obviously this is not yet what we want! We want to merge this with the plan
                            (st/get-microcycle 0)
                            st/microcycle->plan-structure))
       (ui/render-plan (plan/->plan plan/template))

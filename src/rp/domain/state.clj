@@ -79,12 +79,8 @@
          (get-microcycle 0)
          microcycle->plan-structure))
 
-
   new-value
-{"full body" {0 {:monday {"Squat" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Squat", :type :set-completed, :workout :monday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0x1048339f "2025-11-30T16:24:07.192697121Z"], :performed-reps nil} {:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Squat", :type :set-completed, :workout :monday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0x10fd118b "2025-11-30T16:24:07.192705237Z"], :performed-reps nil}], "Pullup" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Pullup", :type :set-completed, :workout :monday, :performed-weight 80, :mesocycle "full body", :timestamp #object[java.time.Instant 0x7948a1c3 "2025-11-30T16:24:07.192707751Z"], :performed-reps nil}]}, :thursday {"Bench" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Bench", :type :set-completed, :workout :thursday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0x5b3d8cf5 "2025-11-30T16:24:07.192711800Z"], :performed-reps nil} {:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Bench", :type :set-completed, :workout :thursday, :performed-weight 100, :mesocycle "full body", :timestamp #object[java.time.Instant 0xab888c6 "2025-11-30T16:24:07.192713943Z"], :performed-reps nil}], "Deadlift" [{:microcycle 0, :prescribed-weight nil, :prescribed-reps nil, :exercise "Deadlift", :type :set-completed, :workout :thursday, :performed-weight 300, :mesocycle "full body", :timestamp #object[java.time.Instant 0x7231a153 "2025-11-30T16:24:07.192716136Z"], :performed-reps nil}]}}}}
 
-
-  (get-in new-value ["full body" 0 :thursday])
 
 
 
