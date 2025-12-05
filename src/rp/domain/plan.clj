@@ -38,8 +38,9 @@
 
 (comment
 
-(let [le-set ()])
+  (let [le-set ()])
 
+  template
 
   ();; end of rich comment block
   )
