@@ -51,6 +51,7 @@
 ;; Public API
 ;; TODO: Move internal functions of state reconstruction to private namespace and expose public api via public namespace
 
+;; TODO: Write at least some "integration-ish" tests
 (defn view-progress-in-plan
   "Creates a progress view (a map) from a given event log and a plan.
 
