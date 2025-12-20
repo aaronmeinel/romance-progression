@@ -1,0 +1,86 @@
+* Bugs
+
+** Weird behaviour when completing the second set of an exercise before the first one
+   That shouldn't make a difference, but in the webapp it does.
+
+   What I can reproduce:
+   If I set the second set of an exercise first, after reload, both sets seem to be logged, one with what i entered here, the other with numbers from the previous
+   exercise.
+   TODO: Track down whether this is UI thing or whether thats somewhere in my logic.
+
+
+   EDIT: I tried what comes next, that didn't solve it.
+   I suspect that the first thing i should try is get rid of the hx-include in the hx-post to log-set!
+
+   I am putting that data into each line anyway (in the form) so there's no need for dom searching stuff, which is way too unpredictable anyway.
+
+
+* UI
+- [ ] Make the return of the log-set route prettier
+      Currently this just returns nil - so the checkbox goes away and you need to reload the page to your progress.
+      The route should return the new line (for now, we might later add in an alert if we need more feedback)
+- [ ] Make some kind of menu, probably a sidebar or something to allow for navigation (or to start, to at least not have signout on the same page as the actual app)
+
+
+* Features
+
+** Progression algorithms
+
+   Currently you just see your progress, no prescribed reps and weights.
+   The progress map should show prescribed reps and weights as soon as data from previous workouts are available.
+
+*** Architecture
+   Of course this requires injecting a function into the pipeline that constructs the progress map.
+
+   So we currently have this in app.clj:
+   #+begin_src clojure
+     (defn progress-map
+  "Render the progress represented by events in the context of the plan generated from template as html."
+  [events template]
+  (-> events
+      (st/view-progress-in-plan (plan/->plan template))
+      (ui/render-plan)))
+
+
+   #+end_src
+
+   Apart from the fact that we cant leave that there (this is a calculation, we shouldn't do that in the namespace as our http-handlers)
+   we probably want an additional namespace "domain/prediction" with a function along the lines of:
+   #+begin_src clojure
+     (next-workout [workout]
+                    ... )
+     (next-workout [events]
+                   ...)
+   #+end_src
+   that will populate the progress-map as much as possible with prescribed values, maybe even adjusts the number of sets.
+
+*** Logic
+  For mvp, we'll just apply a 2.5 % increase on the weight if the target reps have been performed.
+
+  For a more useful product we will have to add an additional progression function that takes feedback like soreness, pain and workload rating and pump
+  and takes that into account. This will be especially important to determine the volume.
+  However this will be higher impact than a simple progression, since
+  - we need to store that information in the events
+  - we need to add a feedback prompt to the ui.
+
+
+
+
+
+*** UI
+  To capture feedback in the UI we can probably get away with determining in our ui namespace whether a set is the first/last of an exercise and based on that (or whatever
+  criterion we come up with) replace the hx-post to log set with another hx-post that will load a feedback form and then you'd only get access to the actual logging route for that
+  set once you have provided the feedback
+
+
+** Undo set logging
+ A user might want to undo logging a set, in case they entered a wrong value.
+ Now there's a decision to be made here. We could lean deeper into the event sourcing light approach and add a "Set logged undone" type of event.
+ We would have to handle that in our state reconstruction logic.
+ If we wanted to avoid that we could also set a kind of timer in the frontend before the post is sent so user would still be able to change for like 5s.
+ But that might destroy the UX, and at some point we really might need more than one event type anyway
+
+** Plan and Exercise management
+ I am currently using an edn file to provide a plan template. I want to keep up support for that, for the nerds like me and for being able to quickly provide default data,
+ and for people to be able to share plans, exercises and whatnot.
+ However other types of users may also want to be able to create plans and exercises in the app. At some point I'll have to implement some CRUD for that.
