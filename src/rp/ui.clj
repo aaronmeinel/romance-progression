@@ -75,8 +75,6 @@
   [attrs]
   [:input (merge {:type "number" :class "input input-bordered"} attrs)])
 
-
-
 (defn set-row
   "Display a set in a row with input elements for logging.
 
@@ -102,7 +100,6 @@
               [:input {:type "checkbox"
                        :hx-post "/log-set"
                        :hx-swap "outerHTML"
-                       :hx-include "closest .exercise"
                        :name "completed"
                        :checked (some? performed-weight)}]]))
 
