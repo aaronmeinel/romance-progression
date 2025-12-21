@@ -1,5 +1,7 @@
 * Bugs
 
+** Logging a set changes order of exercises in UI
+
 ** Weird behaviour when completing the second set of an exercise before the first one
    That shouldn't make a difference, but in the webapp it does.
 
