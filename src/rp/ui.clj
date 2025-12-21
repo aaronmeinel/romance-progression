@@ -5,6 +5,7 @@
             [com.biffweb :as biff]
             [ring.middleware.anti-forgery :as csrf]
             [ring.util.response :as ring-response]
+
             [rum.core :as rum]))
 
 (defn static-path [path]
@@ -14,6 +15,12 @@
                                   (.getTime))]
     (str path "?t=" last-modified)
     path))
+
+
+
+
+
+
 
 (defn base [{:keys [::recaptcha] :as ctx} & body]
   (apply
@@ -75,6 +82,15 @@
   [attrs]
   [:input (merge {:type "number" :class "input input-bordered"} attrs)])
 
+
+
+
+
+(defn log-set-feedback-row [{:keys [mesocycle microcycle workout-day exercise-name]}]
+  [:div "Ok!"])
+
+
+
 (defn set-row
   "Display a set in a row with input elements for logging.
 
@@ -86,22 +102,28 @@
    {:keys [mesocycle microcycle workout-day exercise-name] :as context-map}]
   (biff/form {:class "inline"}
              [:div.set-row.flex.items-center.gap-2
+
               (input {:name "weight"
                       :value performed-weight
                       :placeholder (or prescribed-weight "kg")
                       :inputmode "decimal"
+                      :disabled (some? performed-weight)
                       :step "0.5"})
               [:span "×"]
               (input {:name "reps"
                       :value performed-reps
                       :placeholder (or prescribed-reps "reps")
-                      :inputmode "numeric"})
+                      :inputmode "numeric"
+                      :disabled (some? performed-reps)})
               (map (comp input map-entry->hidden-input-attrs) context-map)
               [:input {:type "checkbox"
                        :hx-post "/log-set"
                        :hx-swap "outerHTML"
+                       :hx-target "closest div.set-row"
                        :name "completed"
+                       :disabled (some? performed-weight)
                        :checked (some? performed-weight)}]]))
+
 
 (defn exercise
   "Display an exercise with its sets."

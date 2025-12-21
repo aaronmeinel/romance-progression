@@ -79,14 +79,8 @@
      (completed-set "full body" 0 :thursday "Deadlift" 300 5 nil nil)
      (completed-set "full body" 1 :monday "Squat" nil nil 102.5 10)])
 
-  (def ^:private from-events
-    (->> events
-         (get-microcycle 0)
-         microcycle->plan-structure
-         vals
-         first))
 
-  from-events
+
 
   (def plan-excerpt
     {0

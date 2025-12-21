@@ -19,7 +19,13 @@
   [events template]
   (-> events
       (st/view-progress-in-plan (plan/->plan template))
+      ;; TODO Inject a prescription function here somewhere - like prog/simple
       (ui/render-plan)))
+
+
+
+
+
 
 (defn app
   "This returns the page where the main functionality happens -
@@ -31,6 +37,7 @@
     (ui/page
      {}
      [:div "Signed in as " email ". "
+
       (biff/form
        {:action "/auth/signout"
         :class "inline"}
@@ -38,6 +45,8 @@
         "Sign out"])
       "."]
 
+     [:div "DEBUG"
+      [:p "Count events:" (count events)]]
      (progress-map events plan/template)
      [:.flex-grow]
 
@@ -49,7 +58,9 @@
         user-id (biff/lookup-id db :user/email email)
         cleaned-data (lg/completed-set params)]
 
-    (commands/log-user-event! ctx user-id cleaned-data)))
+    (ui/log-set-feedback-row (commands/log-user-event! ctx user-id cleaned-data) )))
+
+
 
 (def about-page
   (ui/page
