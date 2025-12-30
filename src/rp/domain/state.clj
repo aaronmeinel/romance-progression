@@ -72,56 +72,32 @@
 
   (def events
     [(completed-set "full body" 0 :monday "Squat" 100 10 nil nil)
-     (completed-set "full body" 0 :monday "Squat" 100 9  nil nil)
      (completed-set "full body" 0 :monday "Pullup" 80 10  nil nil)
      (completed-set "full body" 0 :thursday "Bench" 100 8 nil nil)
-     (completed-set "full body" 0 :thursday "Bench" 100 6 nil nil)
      (completed-set "full body" 0 :thursday "Deadlift" 300 5 nil nil)
      (completed-set "full body" 1 :monday "Squat" nil nil 102.5 10)])
 
 
 
 
-  (def plan-excerpt
-    {0
-     {:monday
-      {"Squat"
-       [{:muscle-groups [:quads], :equipment [:barbell :rack]}
-        {:muscle-groups [:quads], :equipment [:barbell :rack]}],
-       "Pullup"
-       [{:muscle-groups [:back], :equipment [:parallel-bar]}]},
-      :thursday
-      {"Bench"
-       [{:muscle-groups [:chest], :equipment [:bench :barbell]}
-        {:muscle-groups [:chest], :equipment [:bench :barbell]}],
-       "Deadlift"
-       [{:muscle-groups [:hamstrings], :equipment [:barbell]}
-        {:muscle-groups [:hamstrings], :equipment [:barbell]}]}}})
 
-  ;; What we want to do is merge the map that we built from the event log with the plan-map.
-  ;; We've constructed (hopefully) all levels of those maps such that every value is in turn a map,
-  ;; except for the sets of an exercise - which is basically the leaf level of our tree.
-  ;; Those we store as vectors. This is primariy due to the fact that a set cant be really assigned an identity in a meaningful way.
-  ;; Now, if these assumptions hold true, we can do the following on the workout level:
-  (let [wo-from-events (get-in from-events [0 :monday])
-        wo-from-plan   (get-in plan-excerpt [0 :monday])]
-    (merge-with merge-sets wo-from-events wo-from-plan)) ;; Here we just merge monday's workouts with our merge sets function.
+  (def plan
+    {"full body"
+     {0
+      {:monday {"Squat"
+                [{}]
+                "Pullup"
+                [{}]}
+       :thursday {"Bench"
+                  [{}]
+                  "Deadlift"
+                  [{}]}}}})
 
-;; To do that on the next higher level, so for a full microcycle, we could do this:
-  (let [wo-from-events (get-in from-events [0])
-        wo-from-plan   (get-in plan-excerpt [0])]
-    ;; We're basically taking the previous block and feed it as the function argument to another merge-with
-    (merge-with (partial merge-with merge-sets) wo-from-events wo-from-plan))
 
-  ;; As long as our assumption holds true (just maps on every level, except leaves), we can do all of this way more concisely with the deep-merge function.
-  ;; That can be found in the docs for merge-with, so it's included in the utils namespace here.
-  ;; This will just do a merge on all maps found and will apply the provided function only if it encounters something that's not a map.
-  ;; Of course, this locks us into that particular structure, but so far this has only advantages.
-  (let [wo-from-events (get-in from-events [0])
-        wo-from-plan   (get-in plan-excerpt [0])]
-    (utils/deep-merge-with merge-sets wo-from-events wo-from-plan))
 
-;; Now for readability we omitted the top level: the mesocycle name.
+
+
+  (view-progress-in-plan events plan)
+
 
   ()) ;;
- ;;)

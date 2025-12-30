@@ -9,6 +9,7 @@
             [rp.domain.plan :as plan]
             [rp.domain.state :as st]
             [rp.domain.logging :as lg]
+            [rp.domain.progression :as prog]
             [xtdb.api :as xt]
             [cheshire.core :as cheshire]
             [clojure.core :as c]
@@ -19,6 +20,7 @@
   [events template]
   (-> events
       (st/view-progress-in-plan (plan/->plan template))
+      ;;(prog/insert-predictions prog/simple)
       ;; TODO Inject a prescription function here somewhere - like prog/simple
       (ui/render-plan)))
 

@@ -6,7 +6,8 @@
             [ring.middleware.anti-forgery :as csrf]
             [ring.util.response :as ring-response]
 
-            [rum.core :as rum]))
+            [rum.core :as rum]
+            [clojure.string :as str]))
 
 (defn static-path [path]
   (if-some [last-modified (some-> (io/resource (str "public" path))
@@ -139,15 +140,17 @@
   "Display a workout as a section, with the exercises in it."
   [workout-day exercises context-map]
   [:div.workout
-   [:h2.text-2xl.font-bold.mb-4
-    name " - " (clojure.core/name workout-day)]
+   [:h3.text-2xl.font-bold.mb-4
+    (->> workout-day
+         name
+         str/capitalize)]
    [:div.exercises
     (for [[ex-name sets] exercises]
       (exercise ex-name sets (assoc context-map :workout-day (name workout-day))))]])
 
 (defn microcycle [microcycle-idx workouts context-map]
   [:div.microcycle
-   [:h2. "Week " (inc microcycle-idx)]
+   [:h2.text-2xl.font-bold.mb-4 "Week " (inc microcycle-idx)]
    [:div.workouts
     (for [[day exercises] workouts]
       (workout day exercises (assoc context-map :microcycle microcycle-idx)))]])
