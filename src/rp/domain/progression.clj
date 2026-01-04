@@ -1,18 +1,8 @@
 (ns rp.domain.progression
   (:require [rp.domain.state :as st]
-            [com.rpl.specter :as specter]
+            [com.rpl.specter :as s]
+            [clojure.core.match :refer [match]]
             [clojure.math :as math]))
-
-
-
-
-
-
-
-(defn has-performance-data? [set-map]
-  (and (:performed-weight set-map)
-       (:performed-reps set-map)))
-
 
 (defn progress-weight-based-on-reps
   "Returns the next set that should be done, based on set-data.
@@ -48,18 +38,49 @@
    {:prescribed-weight (* 1.025 performed-weight)
     :prescribed-reps performed-reps}))
 
+(defn change-number-of-sets?
+  "Decides whether number of sets should be increased (1), left unchanged (0) or decreased (-1).
+
+  Currently this is just a simple decision matrix. That will probably work alright, but I would like
+  some supervised learning here.
+  "
+  ([metrics]
+   (change-number-of-sets? metrics (constantly 0)))
+  ([{:keys [joint-pain  soreness-duration pump progress-rating workload] :as metrics} score-based-decision]
+
+   (let [score (cond-> 0
+                 (>= joint-pain 2) (- 10)
+                 (= soreness-duration 3) (- 10)
+
+                 (= progress-rating 3) (+ 2)
+                 (= progress-rating 2) (+ 1)
+                 (= progress-rating 1) (- 2)
+
+                 (<= workload 1) (+ 2)
+                 (>= workload 2) (- 2)
 
 
-(defn exercise-history [exercise-name data]
-  (-> data
-      (filter #(= (:exercise-name %) exercise-name))
-       ))
+                 (= soreness-duration 0) (+ 1)
+                 (= soreness-duration 2) (- 1)
+
+                 (= pump 0) (+ 2)
+                 (= joint-pain 1) (- 1)
+                 )]
+     (cond
+       (>= score 3) 1
+       (<= score -3) -1
+       :else 0))))
 
 
+(defn copy-head [[a & rest]]
+  (into [ ] (concat [a a] rest)))
 
-(defn get-last-performed-set [data]
-  data)
-
+(defn adjust-set-count
+  "Takes a list of set-maps and a target set count and returns a modified vector of set-maps with the right amount."
+  [target-n sets]
+  (cond->> sets
+    true (take target-n)
+    (< (count sets) target-n) copy-head ))
 
 
 (defn predict-next-exercise
@@ -68,10 +89,28 @@
   This is not just a map over sets - this takes into account additional feedback and may also increase or decrease the number of sets for an exercise!
 
   "
-  [previous-exercise {:keys [soreness joint-pain pump workload] :as feedback}]
-  (let [n-sets (count previous-exercise)]
-    ;; We might really want to look into when-> / cond-> / some-> or similar here!
-    (repeat (inc n-sets) previous-exercise)))
+  [previous-exercise feedback]
+  (let [progress-rating 4
+        sets-change (change-number-of-sets? (assoc feedback :progress-rating progress-rating))
+        n-sets (+ (count previous-exercise) sets-change )]
+    (->> previous-exercise
+         (mapv progress-weight-based-on-reps)
+         (adjust-set-count n-sets ))))
+
+
+
+
+
+(defn fill-in-predictions
+  "Given training data as a flat vector of maps and a plan, fills the next workout after the latest completed workout with predictions.
+
+  Since you don't want predictions during a workout, this will just return the plan with filled in progress if no workout is completed.
+  "
+  [data plan]
+  nil
+  ;; TODO: Find completed workouts
+  ;; TODO: Find next workouts after completed workouts
+  )
 
 
 (comment
@@ -125,6 +164,7 @@
 
     (progress-weight-based-on-reps my-set))
 
+;; ADJUSTING THE WEIGHT
 ;; When we receive set-data without performance information, that can only mean that the weight was overridden.
   ;; So in this case, we want to adjust the reps, within a certain range, and return nil if the weight would push us out of that rep range.
   (let [my-set {:performed-weight nil :performed-reps nil :prescribed-reps 8 :prescribed-weight 100.0}
@@ -163,13 +203,14 @@
   ;; So this might actually be good enough: Define a step size, and say one step makes one rep difference.
   ;; I mean you would probably arrive at the same conclusion if you solved this with MILP or whatever, and even if that statement is incorrect,
   ;; I really dont care because this is good enough and I want to ship.
-  ;; After this is neither a math nor an exercise science project, but a software engineering project.
+  ;; After all this is neither a math nor an exercise science project, but a software engineering project.
 
     (let [step-size 2.5]
       ;; TODO: Write a function that maps steps to reps
       ))
 
 ;: We might want to add feedback as well, to control the progression
-  (predict-next-exercise [{:exercise-name "Squat"}] {:soreness 0 :joint-pain  0 :pump 1 :workload 2})
+  (predict-next-exercise [{:exercise-name "Squat" :prescribed-weight 100 :prescribed-reps 10 :performed-weight 100 :performed-reps 10}
+                          {:exercise-name "Squat" :prescribed-weight 100 :prescribed-reps 10 :performed-weight 100 :performed-reps 10}] {:soreness 0 :joint-pain  0 :pump 0 :workload 0}))
 
-  ())
+()
