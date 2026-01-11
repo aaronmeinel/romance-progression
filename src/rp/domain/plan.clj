@@ -6,28 +6,33 @@
 (def default-template-path "resources/sample-plan.edn")
 
 
-
 (defn expand-exercises
   "Turn the n-sets specification from a template into n-sets maps, representing sets."
   [{:keys [exercises]}]
-  (-> exercises
-      (update-vals (fn [{:keys [n-sets] :as ex}]
-                     ((comp vec repeat) n-sets
-                      (dissoc ex :n-sets))))))
+  (reduce-kv
+   (fn [m exercise-name {:keys [n-sets] :as ex}]
+     (assoc m exercise-name
+            (vec (repeat n-sets (-> ex
+                                    (dissoc :n-sets)
+                                    (assoc :exercise-name exercise-name))))))
+   {}
+   exercises))
+
+
+
 
 (defn ->plan [{:keys [name n-microcycles workouts] :as template}]
   (let [expanded-workouts (update-vals  workouts expand-exercises)
-        microcycles (zipmap (take n-microcycles (iterate inc 0)) (repeat n-microcycles expanded-workouts))]
+        microcycles (zipmap
+                     (take n-microcycles (iterate inc 0))
+                     (repeat n-microcycles expanded-workouts))]
     {name microcycles}))
-
-
 
 (def template (->> (io/resource "sample-plan.edn")
                    slurp
                    edn/read-string))
 
 (->plan template)
-
 
 (->> template
      ->plan
@@ -42,8 +47,8 @@
 
   template
 
-
-
-  (->plan template)
+  (-> template
+      ->plan
+      (get-in ["Twice a week upper body focus" 0 :monday]))
   ();; end of rich comment block
   )
