@@ -17,6 +17,8 @@
     (str path "?t=" last-modified)
     path))
 
+
+
 (defn base [{:keys [::recaptcha] :as ctx} & body]
   (apply
    biff/base-html
@@ -30,6 +32,7 @@
                             (concat [;; Pico CSS - classless semantic CSS framework
                                      [:link {:rel "stylesheet"
                                              :href "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"}]
+
                                      [:script {:src (static-path "/js/main.js")}]
                                      [:script {:src "https://unpkg.com/htmx.org@2.0.7"}]
                                      [:script {:src "https://unpkg.com/htmx-ext-ws@2.0.2/ws.js"}]
@@ -102,7 +105,6 @@
                      :disabled (some? performed-weight)
                      :step "0.5"
                      :style {:width "5rem"}})
-             [:span {:style {:padding "0 0.5rem"}} "×"]
              (input {:name "reps"
                      :value performed-reps
                      :placeholder (or prescribed-reps "reps")

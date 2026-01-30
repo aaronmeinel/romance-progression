@@ -25,17 +25,17 @@
    (let [timer (Timer.)
          task (atom nil)]
      (with-meta
-      (fn [& args]
-        (when-let [t ^TimerTask @task]
-          (.cancel t))
-        (let [new-task (proxy [TimerTask] []
-                         (run []
-                           (apply f args)
-                           (reset! task nil)
-                           (.purge timer)))]
-          (reset! task new-task)
-          (.schedule timer new-task timeout)))
-      {:task-atom task}))))
+       (fn [& args]
+         (when-let [t ^TimerTask @task]
+           (.cancel t))
+         (let [new-task (proxy [TimerTask] []
+                          (run []
+                            (apply f args)
+                            (reset! task nil)
+                            (.purge timer)))]
+           (reset! task new-task)
+           (.schedule timer new-task timeout)))
+       {:task-atom task}))))
 
 (defmacro future [& body]
   `(clojure.core/future
@@ -168,7 +168,7 @@
                           [(str "app@" server) "mkdir" "-p"] dirs)))
     (doseq [file files]
       (apply shell "scp" (concat
-                           (when ssh-port ["-P" (str ssh-port)])
+                          (when ssh-port ["-P" (str ssh-port)])
                           [file (str "app@" server ":" file)]))))
   ;; deploy-cmd, deploy-from, and deploy-to are all deprecated (but still supported for backwards compatibility)
   (if-some [git-deploy-cmd (or git-deploy-cmd deploy-cmd)]
