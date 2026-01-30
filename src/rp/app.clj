@@ -58,7 +58,7 @@
   (ui/page
    {:base/title (str "About " settings/app-name)}
    [:p "This app was made with "
-    [:a {:href "https://biffweb.com"} "Biff"] "."])))
+    [:a {:href "https://biffweb.com"} "Biff"] "."]))
 
 (defn echo [{:keys [params]}]
   {:status 200

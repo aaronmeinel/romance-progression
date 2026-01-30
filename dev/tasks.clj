@@ -324,10 +324,7 @@
         (run-task "generate-config"))
       (when (fs/exists? "package.json")
         (shell (install-js-deps-cmd)))
-      (let [{:keys [local-bin-installed tailwind-cmd]} (tailwind-installation-info)]
-        (when (and (= tailwind-cmd :local-bin) (not local-bin-installed))
-          (run-task "install-tailwind")))
-      (future (run-task "css" "--watch"))
+      ;; Removed Tailwind CSS - using Pico CSS from CDN instead
       (spit ".nrepl-port" port)
       ((requiring-resolve (symbol (str main-ns) "-main"))))))
 
@@ -347,8 +344,7 @@
     (when-not no-clean
       (println "Cleaning...")
       (run-task "clean"))
-    (println "Generating CSS...")
-    (run-task "css" "--minify")
+    ;; No CSS build needed - using Pico CSS from CDN
     (println "Calling" generate-assets-fn "...")
     ((requiring-resolve generate-assets-fn) ctx)
     (println "Compiling...")

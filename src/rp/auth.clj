@@ -1,6 +1,5 @@
-(ns rp.auth)
-  
-  For simplicity, this uses bcrypt for password hashing and session-based auth.
+(ns rp.auth
+  "For simplicity, this uses bcrypt for password hashing and session-based auth.
   If you want OIDC later, consider using:
   - buddy-auth + buddy-sign for JWT
   - ring-oauth2 for OAuth2/OIDC flows
@@ -71,10 +70,10 @@
     (cond
       (< (count password) 8)
       {:status 303 :headers {"location" "/?error=weak-password"}}
-      
+
       (biff/lookup db :user/email email)
       {:status 303 :headers {"location" "/?error=email-taken"}}
-      
+
       :else
       (let [user-id (random-uuid)]
         (biff/submit-tx ctx

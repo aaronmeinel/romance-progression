@@ -14,8 +14,8 @@
   
   Handles the mapping from HTML form field names to database field names.
   Supports both 'weight'/'reps' and 'performed-weight'/'performed-reps' params."
-  [{:keys [mesocycle microcycle workout workout-day exercise-name set-index 
-           performed-weight performed-reps prescribed-weight prescribed-reps 
+  [{:keys [mesocycle microcycle workout workout-day exercise-name set-index
+           performed-weight performed-reps prescribed-weight prescribed-reps
            weight reps]}]
   {:event/type :set-completed
    :event/mesocycle mesocycle

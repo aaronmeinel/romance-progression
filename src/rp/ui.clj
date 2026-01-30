@@ -28,7 +28,7 @@
                      :image "https://clojure.org/images/clojure-logo-120b.png"})
        (update :base/head (fn [head]
                             (concat [;; Pico CSS - classless semantic CSS framework
-                                     [:link {:rel "stylesheet" 
+                                     [:link {:rel "stylesheet"
                                              :href "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"}]
                                      [:script {:src (static-path "/js/main.js")}]
                                      [:script {:src "https://unpkg.com/htmx.org@2.0.7"}]
