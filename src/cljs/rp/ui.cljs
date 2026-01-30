@@ -77,10 +77,10 @@
      [:header
       [:h1 name]
       [:p "Track your workout progression"]]
-     
+
      (for [micro microcycles]
        ^{:key (first micro)}
        [microcycle-section micro name])
-     
+
      [:footer {:style {:margin-top "2rem" :text-align "center"}}
       [:small "Romance Progression • Local-first PWA"]]]))

@@ -11,7 +11,7 @@
      ;; Render the app
      (rdom/render [ui/app]
                   (.getElementById js/document "app"))
-     
+
      ;; Register service worker for PWA
      (when (.-serviceWorker js/navigator)
        (-> js/navigator
@@ -19,5 +19,5 @@
            (.register "/sw.js")
            (.then #(js/console.log "SW registered"))
            (.catch #(js/console.error "SW failed" %))))
-     
+
      (js/console.log "Romance Progression initialized"))))

@@ -19,12 +19,12 @@
       (db/load-from-edn! data))
     (catch :default e
       (js/console.error "Failed to load DB:" e)))
-  
+
   ;; Auto-save on every transaction
   (add-watch db/db-listener :auto-save
              (fn [_ _ _ _]
                (save-db!)))
-  
+
   (on-complete))
 
 ;; Future: IndexedDB for larger datasets
